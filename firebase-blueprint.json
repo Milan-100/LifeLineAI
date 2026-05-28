@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "Patient": {
+      "title": "Patient",
+      "description": "Patient profile with medical history and records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "dob": { "type": "string", "format": "date" },
+        "gender": { "type": "string" },
+        "problemType": { "type": "string" },
+        "medicalHistory": { "type": "string" },
+        "allergies": { "type": "string" },
+        "bloodGroup": { "type": "string" },
+        "idType": { "type": "string" },
+        "idNumber": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "medicalRecords": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "type": { "type": "string", "enum": ["Prescription", "Lab Report", "Vaccination", "Doctor Note"] },
+              "date": { "type": "string", "format": "date-time" },
+              "fileUrl": { "type": "string" },
+              "fileName": { "type": "string" },
+              "isPrivate": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "required": ["firstName", "lastName", "dob", "gender", "ownerUid"]
+    },
+    "SOSContact": {
+      "title": "SOS Contact",
+      "description": "Emergency contact person",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "relation": { "type": "string" },
+        "isPriority": { "type": "boolean" },
+        "ownerUid": { "type": "string" }
+      },
+      "required": ["name", "phone", "ownerUid"]
+    }
+  },
+  "firestore": {
+    "/patients/{patientId}": {
+      "schema": "Patient",
+      "description": "Collection of patient profiles"
+    },
+    "/sosContacts/{contactId}": {
+      "schema": "SOSContact",
+      "description": "Collection of emergency contacts"
+    }
+  }
+}

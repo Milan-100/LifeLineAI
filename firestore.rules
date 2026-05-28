@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: patients
+    // Document ID: patientId (string)
+    // Fields:
+    //   - firstName: string (required, 1-50 chars)
+    //   - lastName: string (required, 1-50 chars)
+    //   - dob: string (required, ISO 8601 YYYY-MM-DD)
+    //   - gender: string (required, ['Male', 'Female', 'Other'])
+    //   - ownerUid: string (required, matches auth.uid)
+    //   - problemType: string (optional)
+    //   - medicalHistory: string (optional)
+    //   - allergies: string (optional)
+    //   - bloodGroup: string (optional)
+    //   - idType: string (optional)
+    //   - idNumber: string (optional)
+    //   - medicalRecords: list (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isDemoUser(data) {
+      return data.ownerUid.matches("^guest_.*");
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "milantyagi42@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isOwner(userId) {
+      return (isAuthenticated() && request.auth.uid == userId) || userId.matches("^guest_.*");
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.size() >= 10;
+    }
+
+    function isValidPatient(data) {
+      return hasRequiredFields(['firstName', 'lastName', 'dob', 'gender', 'ownerUid']) &&
+             data.firstName is string && data.firstName.size() > 0 && data.firstName.size() < 100 &&
+             data.lastName is string && data.lastName.size() > 0 && data.lastName.size() < 100 &&
+             isValidDateString(data.dob) &&
+             data.gender in ['Male', 'Female', 'Other'] &&
+             ((request.auth != null && data.ownerUid == request.auth.uid) || isDemoUser(data)) &&
+             (!('problemType' in data) || (data.problemType is string && data.problemType.size() < 200)) &&
+             (!('medicalHistory' in data) || (data.medicalHistory is string && data.medicalHistory.size() < 2000)) &&
+             (!('allergies' in data) || (data.allergies is string && data.allergies.size() < 1000)) &&
+             (!('bloodGroup' in data) || (data.bloodGroup is string && data.bloodGroup.size() < 20)) &&
+             (!('idType' in data) || (data.idType is string && data.idType.size() < 100)) &&
+             (!('idNumber' in data) || (data.idNumber is string && data.idNumber.size() < 100)) &&
+             (!('medicalRecords' in data) || data.medicalRecords is list);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /patients/{patientId} {
+      // Users can only read and write their own patients
+      allow read: if (isAuthenticated() && resource.data.ownerUid == request.auth.uid) || isDemoUser(resource.data);
+      allow create: if (isAuthenticated() || isDemoUser(request.resource.data)) && isValidPatient(request.resource.data);
+      allow update: if (isAuthenticated() || isDemoUser(request.resource.data)) && isValidPatient(request.resource.data) && ((request.auth != null && resource.data.ownerUid == request.auth.uid) || isDemoUser(resource.data));
+      allow delete: if (isAuthenticated() && resource.data.ownerUid == request.auth.uid) || isDemoUser(resource.data);
+    }
+
+    match /sosContacts/{contactId} {
+      // Users can only read and write their own emergency contacts
+      allow read: if (isAuthenticated() && (resource == null || resource.data.ownerUid == request.auth.uid)) || (resource != null && isDemoUser(resource.data));
+      allow create: if (isAuthenticated() || isDemoUser(request.resource.data)) && ((request.auth != null && request.resource.data.ownerUid == request.auth.uid) || isDemoUser(request.resource.data)) && 
+                     request.resource.data.name is string && request.resource.data.phone is string;
+      allow update, delete: if (isAuthenticated() && resource.data.ownerUid == request.auth.uid) || isDemoUser(resource.data);
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

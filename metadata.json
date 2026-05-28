@@ -1,0 +1,5 @@
+{
+  "name": "LifeLine AI - Smart Emergency Healthcare",
+  "description": "An AI-powered emergency healthcare response system for rapid medical assistance, hospital tracking, and ambulance booking.",
+  "requestFramePermissions": ["geolocation"]
+}
