@@ -12,7 +12,13 @@ export const MOCK_HOSPITALS: Hospital[] = [
     address: 'Ansari Nagar, New Delhi, Delhi 110029',
     rating: 4.9,
     lat: 28.5672,
-    lng: 77.2100
+    lng: 77.2100,
+    mapsUrl: 'https://maps.app.goo.gl/cmbFSQxZXaJ6nYmp8?g_st=ic',
+    images: [
+      'https://images.unsplash.com/photo-1587351021355-a479a299d2f9?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1586773860418-d37222d8fce2?auto=format&fit=crop&q=80&w=600'
+    ]
   },
   {
     id: '4',
@@ -25,7 +31,13 @@ export const MOCK_HOSPITALS: Hospital[] = [
     address: 'Chandu-Budhera, Gurugram-Badli Road, Gurugram, Haryana 122505',
     rating: 4.6,
     lat: 28.4878,
-    lng: 76.9042
+    lng: 76.9042,
+    mapsUrl: 'https://maps.app.goo.gl/SRo92MHkhjKUgysF7?g_st=iw',
+    images: [
+      'https://images.unsplash.com/photo-1586773860418-d37222d8fce2?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1512678080530-7760d81faba6?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=600'
+    ]
   },
   {
     id: '2',
@@ -38,7 +50,13 @@ export const MOCK_HOSPITALS: Hospital[] = [
     address: '154/11, Bannerghatta Road, Bangalore, Karnataka 560076',
     rating: 4.7,
     lat: 12.8959,
-    lng: 77.5981
+    lng: 77.5981,
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Apollo+Hospital+Bangalore',
+    images: [
+      'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1502740479091-635887520276?auto=format&fit=crop&q=80&w=600'
+    ]
   },
   {
     id: '3',
@@ -51,7 +69,13 @@ export const MOCK_HOSPITALS: Hospital[] = [
     address: 'Sector 44, Gurugram, Haryana 122002',
     rating: 4.8,
     lat: 28.4485,
-    lng: 77.0725
+    lng: 77.0725,
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Fortis+Memorial+Research+Institute+Gurugram',
+    images: [
+      'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1538108176447-28058c3f1733?auto=format&fit=crop&q=80&w=600'
+    ]
   }
 ];
 

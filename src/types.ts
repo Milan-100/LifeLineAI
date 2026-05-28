@@ -45,6 +45,8 @@ export interface Hospital {
   rating: number;
   lat: number;
   lng: number;
+  mapsUrl?: string;
+  images?: string[];
 }
 
 export interface Ambulance {
