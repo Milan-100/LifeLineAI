@@ -4,7 +4,7 @@ export const MOCK_HOSPITALS: Hospital[] = [
   {
     id: '1',
     name: 'AIIMS Delhi',
-    distance: '1.2 km',
+    distance: '50 km',
     bedAvailability: 15,
     icuAvailability: 4,
     specialization: ['Cardiology', 'Trauma', 'Pediatrics'],
@@ -13,6 +13,19 @@ export const MOCK_HOSPITALS: Hospital[] = [
     rating: 4.9,
     lat: 28.5672,
     lng: 77.2100
+  },
+  {
+    id: '4',
+    name: 'SGT Hospital',
+    distance: '14 km',
+    bedAvailability: 22,
+    icuAvailability: 6,
+    specialization: ['General Medicine', 'Emergency Medicine', 'Orthopedics'],
+    contact: '+91 124 227 8184',
+    address: 'Chandu-Budhera, Gurugram-Badli Road, Gurugram, Haryana 122505',
+    rating: 4.6,
+    lat: 28.4878,
+    lng: 76.9042
   },
   {
     id: '2',

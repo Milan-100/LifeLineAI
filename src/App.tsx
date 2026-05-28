@@ -308,6 +308,7 @@ export default function App() {
   const [isCreatingPatient, setIsCreatingPatient] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notifications, setNotifications] = useState<{ id: string; text: string; type: 'info' | 'alert' }[]>([]);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Auth State
@@ -431,6 +432,8 @@ export default function App() {
   };
 
   const handleGoogleLogin = async () => {
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -443,14 +446,24 @@ export default function App() {
       addNotification(`Welcome ${result.user.displayName || 'User'}!`);
     } catch (error: any) {
       console.error("Google Auth error:", error);
-      addNotification('Google Sign-In failed. Please try again.', 'alert');
+      if (error.code === 'auth/cancelled-popup-request' || error.message?.includes('cancelled-popup-request') || error.code === 'auth/popup-closed-by-user') {
+        addNotification('Google Sign-In popup was closed or cancelled.', 'alert');
+      } else if (error.code === 'auth/popup-blocked' || error.message?.includes('popup-blocked')) {
+        addNotification('Google sign-in popup was blocked by your browser. Please allow popups or use "Continue as Guest".', 'alert');
+      } else {
+        addNotification('Google Sign-In failed. Please try "Continue as Guest" or allow popups.', 'alert');
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   const handleVerifyOtp = (currentOtp?: string) => {
+    if (isLoggingIn) return;
     const otp = currentOtp || otpInput.join('');
     if (otp.length === 4) {
       if (otp === '0000') {
+        setIsLoggingIn(true);
         const fallbackId = 'guest_' + Math.random().toString(36).substr(2, 9);
         signInAnonymously(auth).then((result) => {
           setUser({ name: 'User', phone: phoneInput, uid: result.user.uid });
@@ -466,6 +479,8 @@ export default function App() {
           if (err.code === 'auth/admin-restricted-operation') {
             console.warn('Anonymous Login is disabled in Firebase Console.');
           }
+        }).finally(() => {
+          setIsLoggingIn(false);
         });
         setIsOtpError(false);
         setAuthError(null);
@@ -645,7 +660,8 @@ export default function App() {
 
           <button 
             onClick={handleGoogleLogin}
-            className="w-full py-4 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-2xl font-semibold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-3 mb-4"
+            disabled={isLoggingIn}
+            className="w-full py-4 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-2xl font-semibold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-3 mb-4 disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -653,11 +669,14 @@ export default function App() {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Sign in with Google
+            {isLoggingIn ? 'Connecting...' : 'Sign in with Google'}
           </button>
 
           <button 
+            disabled={isLoggingIn}
             onClick={() => {
+              if (isLoggingIn) return;
+              setIsLoggingIn(true);
               const fallbackId = 'guest_' + Math.random().toString(36).substr(2, 9);
               signInAnonymously(auth).then((result) => {
                 setUser({ name: 'Guest', phone: phoneInput || '', uid: result.user.uid });
@@ -669,11 +688,13 @@ export default function App() {
                 setUser({ name: 'Guest', phone: phoneInput || '', uid: fallbackId });
                 setCurrentScreen('dashboard');
                 addNotification('Welcome Guest! (Demo Mode)');
+              }).finally(() => {
+                setIsLoggingIn(false);
               });
             }}
-            className="w-full py-4 text-slate-500 font-medium text-sm hover:text-blue-600 transition-colors"
+            className="w-full py-4 text-slate-500 font-medium text-sm hover:text-blue-600 transition-colors disabled:opacity-50"
           >
-            Continue as Guest
+            {isLoggingIn ? 'Please wait...' : 'Continue as Guest'}
           </button>
         </div>
       ) : (
@@ -736,10 +757,11 @@ export default function App() {
             <p className="text-center text-xs text-slate-400 font-medium">Hint: Use <span className="text-blue-600">0000</span> for demo</p>
           )}
           <button 
-            onClick={handleVerifyOtp}
-            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-semibold shadow-lg shadow-blue-200 dark:shadow-none"
+            onClick={() => handleVerifyOtp()}
+            disabled={isLoggingIn}
+            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-semibold shadow-lg shadow-blue-200 dark:shadow-none disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            Verify & Login
+            {isLoggingIn ? 'Verifying...' : 'Verify & Login'}
           </button>
           <p className="text-center text-slate-500 dark:text-slate-400">
             Didn't receive code? <button className="text-blue-600 font-semibold">Resend</button>
@@ -905,9 +927,9 @@ export default function App() {
           </button>
 
           {/* Patient Cards */}
-          {patients.map(p => (
+          {patients.map((p, idx) => (
             <div 
-              key={p.id}
+              key={`${p.id}-${idx}`}
               className="flex-shrink-0 w-40 h-40 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 flex flex-col justify-between hover:border-blue-500 transition-all cursor-pointer"
               onClick={() => setSelectedPatient(p)}
             >
@@ -1517,8 +1539,8 @@ export default function App() {
             >
               <Plus className="w-5 h-5" /> Add New Patient
             </button>
-            {patients.map(patient => (
-              <div key={patient.id} className="p-6 bg-white dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800">
+            {patients.map((patient, pIdx) => (
+              <div key={`${patient.id}-${pIdx}`} className="p-6 bg-white dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
                     <User className="text-blue-600 dark:text-blue-400 w-8 h-8" />
@@ -1592,8 +1614,8 @@ export default function App() {
                       <p className="text-xs text-slate-500">No records uploaded yet</p>
                     </div>
                   ) : (
-                    patient.medicalRecords.map(record => (
-                      <div key={record.id} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                    patient.medicalRecords.map((record, rIdx) => (
+                      <div key={`${record.id}-${rIdx}`} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-3">
                         <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center">
                           <FileText className="w-5 h-5 text-slate-400" />
                         </div>
@@ -1938,8 +1960,8 @@ export default function App() {
 
                     {newPatientForm.medicalRecords.length > 0 && (
                       <div className="grid grid-cols-2 gap-3 mt-3">
-                        {newPatientForm.medicalRecords.map(record => (
-                          <div key={record.id} className="relative group overflow-hidden border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm p-3 flex flex-col items-center">
+                        {newPatientForm.medicalRecords.map((record, rIdx) => (
+                          <div key={`${record.id}-${rIdx}`} className="relative group overflow-hidden border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm p-3 flex flex-col items-center">
                             {record.base64Data?.startsWith('data:image/') ? (
                               <img 
                                 src={record.base64Data} 
@@ -2091,9 +2113,9 @@ export default function App() {
                        <p>No patients added yet.</p>
                     </div>
                   ) : (
-                    patients.map(p => (
+                    patients.map((p, idx) => (
                       <div 
-                        key={p.id}
+                        key={`${p.id}-${idx}`}
                         onClick={() => {
                           setSelectedPatient(p);
                         }}
@@ -2201,8 +2223,8 @@ export default function App() {
                           <p className="text-xs text-slate-400 italic">No records uploaded yet.</p>
                         </div>
                       ) : (
-                        selectedPatient.medicalRecords.map(record => (
-                          <div key={record.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center gap-3 group">
+                        selectedPatient.medicalRecords.map((record, rIdx) => (
+                          <div key={`${record.id}-${rIdx}`} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center gap-3 group">
                             <div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center border border-slate-100 dark:border-slate-600">
                                <FileText className="w-5 h-5 text-slate-400" />
                             </div>
@@ -2660,7 +2682,7 @@ export default function App() {
                     onClick={async () => {
                       if (newRecordForm.title) {
                         const newRecord: MedicalRecord = {
-                          id: Date.now().toString(),
+                          id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                           title: newRecordForm.title,
                           type: newRecordForm.type,
                           date: new Date().toLocaleDateString(),
